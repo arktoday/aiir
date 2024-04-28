@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "access_system_db",
+            "database": "${workspaceFolder:aiir}/access_system/db.sqlite3"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

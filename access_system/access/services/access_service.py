@@ -1,6 +1,6 @@
 from datetime import datetime
-from access_system.access.models import Source, User
-
+from access.models import Source, UserSource
+from django.contrib.auth.models import User
 
 users: list[User] = []
 sources: list[Source] = []
@@ -8,7 +8,9 @@ history: list[dict] = []
 
 
 class AccessService:
-    def create_user(username: str, password: str) -> User | bool:
+    def create_user(username: str, password: str) -> User | bool: 
+        user = User.objects.create_user(username, None, password)
+        
         if get_user(username=username) is None:
             user = User(username, password)
             users.append(user)
@@ -22,6 +24,9 @@ class AccessService:
         return source
 
     def get_user(user_id: int = None, username: str = None) -> User | None:
+        user = User.objects.get(username= username)
+        return user
+        
         if user_id is not None or username is not None:
             for user in users:
                 if user.id == user_id or user.username == username:

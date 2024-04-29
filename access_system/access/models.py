@@ -1,35 +1,20 @@
 import itertools
 import bcrypt
 
-
 from django.db import models
+from django.conf import settings
+
 
 class Source(models.Model):
     name = models.CharField(max_length=255)
-    
+
     class Meta:
-        db_table = 'source'
+        db_table = "source"
 
 
-# class User:
-#     IS_ADMIN: int = 0
+class UserSource(models.Model):
+    source = models.ForeignKey("Source", on_delete=models.PROTECT, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
 
-#     id_iter = itertools.count(1)
-
-#     id: int
-#     username: str
-#     password_hash: str
-
-#     def __init__(self, username: str, password: str):
-#         self.id = next(User.id_iter)
-#         self.username = username
-
-#         salt = bcrypt.gensalt()
-#         self.password_hash = bcrypt.hashpw(password, salt)
-
-#         self.source_access = []
-#         self.is_admin = 0
-
-#     @staticmethod
-#     def check_pasword(hashed_password: str, password: str) -> bool:
-#         return hashed_password == bcrypt.hashpw(password, hashed_password)
+    class Meta:
+        db_table = "user_source"

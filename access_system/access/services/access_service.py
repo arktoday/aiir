@@ -8,40 +8,40 @@ history: list[dict] = []
 
 
 class AccessService:
-    def create_user(username: str, password: str) -> User | bool: 
-        user = User.objects.create_user(username, None, password)
+    def create_user(self, auth_user, username: str, password: str) -> User | bool:
+        return auth_user.is_superuser == 1
+        if User.objects.filter(username=username).exists():
+            return False
         
-        if get_user(username=username) is None:
-            user = User(username, password)
-            users.append(user)
-            return user
+        user = User.objects.create_user(username, None, password)
+        user.save()
 
-        return False
+        return user
+    
+    def get_user(self, user_id: int = None, username: str = None) -> User | None:
+        try:
+            if user_id:
+                user = User.objects.get(pk=user_id)
+            elif username:
+                user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            user = None
+            
+        return user
 
-    def create_source(name: str):
+    def create_source(self, name: str):
         source = Source(name)
         sources.append(source)
         return source
 
-    def get_user(user_id: int = None, username: str = None) -> User | None:
-        user = User.objects.get(username= username)
-        return user
-        
-        if user_id is not None or username is not None:
-            for user in users:
-                if user.id == user_id or user.username == username:
-                    return user
-
-        return None
-
-    def get_source(source_id: int) -> Source | None:
+    def get_source(self, source_id: int) -> Source | None:
         for source in sources:
             if source.id == source_id:
                 return source
 
         return None
 
-    def check_access(user_id: int, source_id: int) -> bool:
+    def check_access(self, user_id: int, source_id: int) -> bool:
         user = get_user(user_id)
         if user is None:
             return False
@@ -63,7 +63,7 @@ class AccessService:
 
         return access
 
-    def delete_access(user_id: int, source_id: int) -> bool:
+    def delete_access(self, user_id: int, source_id: int) -> bool:
         user = get_user(user_id)
         if user is None:
             return False
@@ -73,7 +73,7 @@ class AccessService:
 
         return True
 
-    def set_access(user_id: int, source_id: int) -> bool:
+    def set_access(self, user_id: int, source_id: int) -> bool:
         user = get_user(user_id)
         source = get_source(source_id)
 

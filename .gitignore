@@ -11,3 +11,5 @@ env/
 ENV/
 
 *.sql
+access_system/access/__pycache__
+access_system/access_system/__pycache__

@@ -16,7 +16,7 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path
-from access.views import AccessViewSet
+from access.views import AccessViewSet, SourceViewSet, UserViewSet
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 
@@ -24,5 +24,13 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
     
-    path('api/user/', AccessViewSet.as_view({'post': 'create_user'}), name='create_user'),
+    path('api/user/', UserViewSet.as_view({'post': 'create_user'}), name='create_user'),
+    path('api/user/', UserViewSet.as_view({'get': 'get'}), name='all_users'),
+    
+    path('api/source/', SourceViewSet.as_view({'post': 'create_source'}), name='create_source'),
+    path('api/source/', SourceViewSet.as_view({'get': 'get'}), name='all_sources'),
+    
+    path('api/access/', AccessViewSet.as_view({'post': 'set_access'}), name='set_access_to_user'),
+    path('api/access/', AccessViewSet.as_view({'delete': 'delete'}), name='delete_user_access'),
+    path('api/access/', AccessViewSet.as_view({'get': 'get'}), name='check_access'),
 ]

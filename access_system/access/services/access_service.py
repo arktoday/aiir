@@ -1,6 +1,8 @@
 from datetime import datetime
 from access.models import Source, UserSource, AccessHistory
 from django.contrib.auth.models import User
+from access.services.operations_service import OperationsService
+from access.scheduler import scheduler, DateTrigger
 
 
 class UserService:
@@ -18,6 +20,14 @@ class UserService:
 
     def get_all_users(self, auth_user):
         return User.objects.all()
+    
+    def get_user(self, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except:
+            return False
+        
+        return user
 
 
 class SourceService:
@@ -33,11 +43,21 @@ class SourceService:
 
         return source
 
-    def get_all_sources(self, auth_user):
+    def get_all_sources(self):
         return Source.objects.all()
+    
+    def get_source(self, source_id):
+        try:
+            source = Source.objects.get(id=source_id)
+        except:
+            return False
+        
+        return source
 
 
 class AccessService:
+    operations_service = OperationsService()
+    
     def set_access(self, auth_user, user_id: int, source_id: int) -> bool:
         user = User.objects.get(id=user_id)
         source = Source.objects.get(id=source_id)
@@ -87,3 +107,20 @@ class AccessService:
         history.save()
 
         return access_status
+    
+    def export_access_history(self):
+        operation_id = self.ops_service.create_operation()
+        scheduler.add_job(self._access_history_to_file,
+                          DateTrigger(datetime.now()), (operation_id, ))
+        return operation_id
+
+    def _access_history_to_file(self, operation_id: int):
+        strings = [
+            f"{app.id},{app.driver_id},{app.status.value},{(app.finished_date - app.created_date).total_seconds() if app.finished_date else ''}" for app in applications.values()]
+        time.sleep(1)
+        filename = f"static/reports/report_{datetime.now().isoformat(timespec='seconds').replace(':', '-')}.csv"
+        with open(f"applications/{filename}", 'w')as f:
+            f.write('\n'.join(strings))
+
+        self.ops_service.finish_operation(operation_id, { 'url': filename })
+

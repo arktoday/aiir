@@ -28,4 +28,11 @@ class AccessHistory(models.Model):
     
     class Meta:
         db_table = "access_history"
-    
+
+
+class Operation(models.Model):
+    done = models.BooleanField(default=False)
+    result = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = "operation"

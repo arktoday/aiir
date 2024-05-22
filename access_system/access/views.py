@@ -19,6 +19,7 @@ from access.serializers import (
     SetAccessSerializer,
     BaseRequestAccessSerializer,
     CheckAccessSerializer,
+    BasicUserSerializer,
 )
 from access.models import Source
 
@@ -96,7 +97,7 @@ class AccessViewSet(ViewSet):
         if not query_serializer.is_valid():
             raise ValidationError(query_serializer.errors)
         if not auth_serializer.is_valid():
-            raise ValidationError(query_serializer.errors)
+            raise ValidationError(auth_serializer.errors)
 
         access_status = self.access_service.check_access(
             **query_serializer.data, **auth_serializer.data
@@ -152,6 +153,30 @@ class UserViewSet(ViewSet):
 
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        summary="Get User by id",
+        request=AuthUserSerializer,
+        tags=["User"],
+    )
+    def get_user(self, request, id):
+        auth_serializer = AuthUserSerializer(
+            data=request.data, context={"request": request}
+        )
+        if not auth_serializer.is_valid():
+            raise ValidationError(auth_serializer.errors)
+        
+        if auth_serializer.data["auth_user"].is_superuser != 1:
+            return Response(
+                "Only superuser can get all users", status=status.HTTP_403_FORBIDDEN
+            )
+
+        user = self.user_service.get_user(id)
+
+        if user:
+            user = UserSerializer(user).data
+
+        return Response(user)
 
 
 class SourceViewSet(ViewSet):
@@ -185,22 +210,24 @@ class SourceViewSet(ViewSet):
 
     @extend_schema(
         summary="Get Sources",
-        request=AuthUserSerializer,
         tags=["Source"],
         methods=["get"],
+        auth=False
     )
     def get(self, request):
-        query_serializer = AuthUserSerializer(
-            data=request.data, context={"request": request}
-        )
-        if not query_serializer.is_valid():
-            raise ValidationError(query_serializer.errors)
-        if query_serializer.data["auth_user"].is_superuser != 1:
-            return Response(
-                "Only superuser can get all sources", status=status.HTTP_403_FORBIDDEN
-            )
-
-        sources = self.source_service.get_all_sources(**query_serializer.data)
+        sources = self.source_service.get_all_sources()
 
         serializer = SourceResponseSerializer(sources, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        summary="Get Source by id",
+        tags=["Source"],
+        auth=False
+    )
+    def get_source(self, request, id):
+        source = self.source_service.get_source(id)
+        if source:
+            source = SourceResponseSerializer(source).data
+
+        return Response(source)
